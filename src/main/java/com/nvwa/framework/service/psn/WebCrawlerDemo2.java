@@ -24,7 +24,7 @@ public class WebCrawlerDemo2 {
 			e.printStackTrace();
 		}
         WebCrawlerDemo2 webCrawlerDemo = new WebCrawlerDemo2();
-        webCrawlerDemo.myPrint("https://store.playstation.com/zh-hant-hk/home/games");
+        webCrawlerDemo.myPrint(Constants.psn_jp);
        long end = System.nanoTime();
        System.out.println((end - time)/1000000 + "ms");
     }
@@ -68,8 +68,12 @@ public class WebCrawlerDemo2 {
             // 如果没有被遍历过
             if (!mapping.getValue()) {
                 oldLink = mapping.getKey();
-                if(oldLink.indexOf("//product//")!=-1) {
-                	oldMap.remove(oldLink);
+                if(oldLink.indexOf("/product/")!=-1) {
+                	oldMap.replace(oldLink, false, true);
+                	continue;
+                }
+                if(oldLink.indexOf("/resolve/")!=-1) {
+                	oldMap.replace(oldLink, false, true);
                 	continue;
                 }
                 // 发起GET请求

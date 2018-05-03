@@ -16,7 +16,11 @@ public class Task implements Runnable {
 	public void run() {
 		  try { 
 			  List<Item> items = DownloadPage.print(doc);
-			  ExcelUtils.writeExcel(items, Constants.finalXlsxPath);
+			  if(items.size() == 0) {
+				  System.out.println("no items in this page: " + url);
+			  }else {
+				  ExcelUtils.writeExcel(items, Constants.finalXlsxPath);
+			  }
 		} catch (Exception e) { 
 			e.printStackTrace();
 		}
