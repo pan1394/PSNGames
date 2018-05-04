@@ -7,14 +7,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 public class DownloadPage {
 
-	private final String HOME = "G:/webpage";
+	private final String HOME = "G:/webpage"; 
 	public List<Item> getItems() {
 		return items;
 	}
@@ -27,9 +26,9 @@ public class DownloadPage {
 		Document doc = Jsoup.connect(url).get(); 
 		try { 
 			List<Item> rs = DownloadPage.print(doc);
-			ExcelUtils.deleteExcel(Constants.finalXlsxPath);
-			ExcelUtils.createExcel(Constants.finalXlsxPath, "PSN HK Store");
-	        ExcelUtils.writeExcel(rs, Constants.finalXlsxPath);
+			ExcelUtils.deleteExcel(Constants.get(Constants.HK).XLSX_PATH);
+			ExcelUtils.createExcel(Constants.get(Constants.HK).XLSX_PATH, Constants.get(Constants.HK).PSN);
+	        ExcelUtils.writeExcel(rs, Constants.get(Constants.HK).XLSX_PATH); 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

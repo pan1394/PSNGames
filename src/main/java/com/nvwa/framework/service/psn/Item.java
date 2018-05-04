@@ -60,7 +60,7 @@ public class Item {
 		//display_price/strikethrough_price
 		String discount;
 		try {
-			float res = this.getHKDollar(this.display_price)/this.getHKDollar(this.strikethrough_price);
+			float res = this.getDollar(this.display_price)/this.getDollar(this.strikethrough_price);
 			res = res * 10;
 			NumberFormat format = NumberFormat.getInstance();
 			format.setMaximumFractionDigits(1);
@@ -74,7 +74,7 @@ public class Item {
 		//plus_price/display_price
 		String discount;
 		try {
-			float res = this.getHKDollar(this.plus_price)/this.getHKDollar(this.display_price);
+			float res = this.getDollar(this.plus_price)/this.getDollar(this.display_price);
 			res = res * 10;
 			NumberFormat format = NumberFormat.getInstance();
 			format.setMaximumFractionDigits(1);
@@ -85,10 +85,12 @@ public class Item {
 		return discount; 
 	}
 	
-	private float getHKDollar(String price) {
-		if(price.indexOf("HK$")!=-1)
+	private float getDollar(String price) {
+		if(price.indexOf(Constants.CURRENCY_HK) != -1)
 			return Float.parseFloat(price.substring(3));
-		else
+		else if(price.indexOf(Constants.CURRENCY_JP) != -1 || price.indexOf(Constants.CURRENCY_US) != -1) {
+			return Float.parseFloat(price.substring(1));
+		}
 			throw new RuntimeException("Not a float.");
 	 
 	}

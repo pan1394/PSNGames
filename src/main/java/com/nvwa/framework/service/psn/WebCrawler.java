@@ -24,6 +24,7 @@ public class WebCrawler {
 	private ExecutorService pool;
 	private List<String> ignoreList;
 	private Workbook workbook;
+	private Constants.Base constants;
 	
 	private static class Holder{
 		private static WebCrawler instance = new WebCrawler();
@@ -35,9 +36,11 @@ public class WebCrawler {
 	private WebCrawler() {
 		pool = Executors.newFixedThreadPool(5);
 		ignoreList = Arrays.asList("product", "resolve");
+		constants= Constants.get(Constants.HK);
+		
 		try {
-			ExcelUtils.init(Constants.finalXlsxPath);
-			workbook =  ExcelUtils.getWorkbook(new File(Constants.finalXlsxPath));
+			ExcelUtils.init(constants.XLSX_PATH, constants.PSN);
+			workbook =  ExcelUtils.getWorkbook(new File(constants.XLSX_PATH));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -45,11 +48,11 @@ public class WebCrawler {
 	 
 	public void start() throws FileNotFoundException, InterruptedException {
 		long time = System.nanoTime(); 
-        myPrint(Constants.psn_hk);
+        myPrint(constants.URL);
         pool.shutdown();
         while (true) {    
             if (pool.isTerminated()) {   
-            	OutputStream out  = new FileOutputStream(Constants.finalXlsxPath);
+            	OutputStream out  = new FileOutputStream(constants.XLSX_PATH);
 				ExcelUtils.writeAndClose(out, workbook);
                 break;    
             }    

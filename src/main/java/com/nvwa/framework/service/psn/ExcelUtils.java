@@ -72,7 +72,7 @@ public class  ExcelUtils {
     
     public synchronized static void writeExcel(List<Item> dataList, Workbook workBook){ 
         try {  
-        	Sheet sheet = workBook.getSheet(Constants.PSN);
+        	Sheet sheet = workBook.getSheetAt(0);
             int rowNumber = sheet.getLastRowNum();    // 第一行从0开始算
             logger.info("原始数据总行数，除标题行：{}", rowNumber);  
             /**
@@ -201,8 +201,8 @@ public class  ExcelUtils {
             return flag;  
         }  
        
-        public static void init(String fileDir) throws Exception {
+        public static void init(String fileDir, String sheetName) throws Exception {
         	ExcelUtils.deleteExcel(fileDir);
-        	ExcelUtils.createExcel(fileDir, Constants.PSN);
+        	ExcelUtils.createExcel(fileDir, sheetName);
         }
 }
