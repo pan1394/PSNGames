@@ -36,7 +36,7 @@ public class WebCrawler {
 	private WebCrawler() {
 		pool = Executors.newFixedThreadPool(5);
 		ignoreList = Arrays.asList("product", "resolve");
-		constants= Constants.get(Constants.HK);
+		constants= Constants.get(Constants.US);
 		
 		try {
 			ExcelUtils.init(constants.XLSX_PATH, constants.PSN);
@@ -103,9 +103,17 @@ public class WebCrawler {
         for (Map.Entry<String, Boolean> mapping : oldMap.entrySet()) {
             // System.out.println("link:" + mapping.getKey() + "--------check:"  + mapping.getValue());
             // 如果没有被遍历过
-        	boolean ignore = false;
             if (!mapping.getValue()) {
                 oldLink = mapping.getKey(); 
+                boolean ignore1 = false;
+            	for(String key : ignoreList) {
+                	if(oldLink.indexOf(key) != -1) {
+                		oldMap.replace(oldLink, false, true);
+                		ignore1 = true;
+                    	break;
+                	}
+                }
+                if(ignore1) continue;
                 // 发起GET请求
                 try {
                    
@@ -113,14 +121,14 @@ public class WebCrawler {
                     Elements elements = doc.select("a[href]");
                     for(Element e : elements) {
                     	String newLink = e.attr("href");
+                    	boolean ignore2 = false;
                     	for(String key : ignoreList) {
-                        	if(newLink.indexOf(key) != -1) {
-                        		oldMap.replace(newLink, false, true);
-                        		ignore = true;
+                        	if(newLink.indexOf(key) != -1) { 
+                        		ignore2 = true;
                             	break;
                         	}
                         }
-                        if(ignore) continue;
+                        if(ignore2) continue;
                         // 判断获取到的链接是否以http开头
                         if (!newLink.startsWith("http")) {
                             if (newLink.startsWith("/"))
