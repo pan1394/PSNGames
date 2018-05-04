@@ -5,10 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -16,45 +13,25 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class  ExcelUtils {
     private static final String EXCEL_XLS = "xls";
     private static final String EXCEL_XLSX = "xlsx";
-    
-    public static void main(String[] args) {
-        
-        Map<String, String> dataMap=new HashMap<String, String>();
-        dataMap.put("BankName", "BankName");
-        dataMap.put("Addr", "Addr");
-        dataMap.put("Phone", "Phone");
-        List<Map> list=new ArrayList<Map>();
-        list.add(dataMap); 
-        
-        
-    }
+    private final static Logger logger = LoggerFactory.getLogger(ExcelUtils.class); 
 
     public synchronized static void writeExcel(List<Item> dataList, String finalXlsxPath){
         OutputStream out = null;
         try { 
             // 读取Excel文档
             File finalXlsxFile = new File(finalXlsxPath);
-            Workbook workBook = getWorkbok(finalXlsxFile);
+            Workbook workBook = getWorkbook(finalXlsxFile);
             // sheet 对应一个工作页
             Sheet sheet = workBook.getSheetAt(0); 
             int rowNumber = sheet.getLastRowNum();    // 第一行从0开始算
-            System.out.println("原始数据总行数，除属性列：" + rowNumber); 
-            if(rowNumber == 0) {
-            	Row prop = sheet.createRow(0);
-            	prop.createCell(0).setCellValue("名称");
-            	prop.createCell(1).setCellValue("价格");  
-            	prop.createCell(2).setCellValue("原价");
-            	prop.createCell(3).setCellValue("折扣");
-            	prop.createCell(4).setCellValue("plus价格");
-            	prop.createCell(5).setCellValue("plus折扣");
-            	prop.createCell(6).setCellValue("类别");
-            	prop.createCell(7).setCellValue("平台");
-            	prop.createCell(8).setCellValue("链接"); 
-            }
+            System.out.println("原始数据总行数，除属性行：" + rowNumber);  
             /**
              * 往Excel中写新数据
              */
@@ -90,8 +67,51 @@ public class  ExcelUtils {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-
+        } 
+    }
+    
+    public synchronized static void writeExcel(List<Item> dataList, Workbook workBook){ 
+        try {  
+        	Sheet sheet = workBook.getSheet(Constants.PSN);
+            int rowNumber = sheet.getLastRowNum();    // 第一行从0开始算
+            logger.info("原始数据总行数，除标题行：{}", rowNumber);  
+            /**
+             * 往Excel中写新数据
+             */
+            for (int j = 0; j < dataList.size(); j++) {
+                // 创建一行：从第二行开始，跳过属性列
+                Row row = sheet.createRow(j + rowNumber + 1);
+                // 得到要插入的每一条记录
+                Item data = dataList.get(j);   
+                Cell first = row.createCell(0);
+                first.setCellValue(data.getTitle());  
+                row.createCell(1).setCellValue(data.getDisplay_price());  
+                row.createCell(2).setCellValue(data.getStrikethrough_price());
+                row.createCell(3).setCellValue(data.getDiscount());
+                row.createCell(4).setCellValue(data.getPlus_price());
+                row.createCell(5).setCellValue(data.getPlus_discount());
+                row.createCell(6).setCellValue(data.getClassification());
+                row.createCell(7).setCellValue(data.getPlatform());
+                row.createCell(8).setCellValue(data.getHypelink());
+            } 
+            logger.info("数据写入{} 条", dataList.size());
+        } catch (Exception e) {
+            e.printStackTrace();
+        } 
+    }
+    
+    public static void writeAndClose(OutputStream out, Workbook workBook) { 
+        try {
+			workBook.write(out);
+			out.flush();
+			out.close();
+		} catch (IOException e) {
+			try {
+				out.close();
+			} catch (IOException e1) { 
+				e1.printStackTrace();
+			} 
+		}
     }
 
     /**
@@ -101,7 +121,7 @@ public class  ExcelUtils {
      * @return
      * @throws IOException
      */
-    public static Workbook getWorkbok(File file) throws IOException{
+    public static Workbook getWorkbook(File file) throws IOException{
         Workbook wb = null;
         FileInputStream in = new FileInputStream(file);
         if(file.getName().endsWith(EXCEL_XLS)){     //Excel&nbsp;2003
@@ -111,13 +131,8 @@ public class  ExcelUtils {
         }
         return wb;
     }
-    
  
-
-    
-    private static Workbook workbook = null;  
-    
-    /** 
+	/** 
      * 判断文件是否存在. 
      * @param fileDir  文件路径 
      * @return 
@@ -137,7 +152,7 @@ public class  ExcelUtils {
          */  
         public static void createExcel(String fileDir,String sheetName) throws Exception{  
             //创建workbook  
-            workbook = new XSSFWorkbook();  
+        	Workbook workbook = new XSSFWorkbook();  
             //添加Worksheet（不添加sheet时生成的xls文件打开时会报错)  
             Sheet sheet1 = workbook.createSheet(sheetName);    
             //新建文件  

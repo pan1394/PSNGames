@@ -1,32 +1,69 @@
 package com.nvwa.framework.service.psn;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.poi.ss.usermodel.Workbook;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class WebCrawlerDemo2 {
-	 
-	private ExecutorService pool = Executors.newFixedThreadPool(5);
+public class WebCrawler {
 	
-    public static void main(String[] args) {
-    	long time = System.nanoTime();
-    	try {
+	private ExecutorService pool;
+	private List<String> ignoreList;
+	private Workbook workbook;
+	
+	private static class Holder{
+		private static WebCrawler instance = new WebCrawler();
+	}
+	private static WebCrawler getInstance() {
+		return Holder.instance;
+	}
+	
+	private WebCrawler() {
+		pool = Executors.newFixedThreadPool(5);
+		ignoreList = Arrays.asList("product", "resolve");
+		try {
 			ExcelUtils.init(Constants.finalXlsxPath);
-		} catch (Exception e) { 
+			workbook =  ExcelUtils.getWorkbook(new File(Constants.finalXlsxPath));
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
-        WebCrawlerDemo2 webCrawlerDemo = new WebCrawlerDemo2();
-        webCrawlerDemo.myPrint(Constants.psn_jp);
+	}
+	 
+	public void start() throws FileNotFoundException, InterruptedException {
+		long time = System.nanoTime(); 
+        myPrint(Constants.psn_hk);
+        pool.shutdown();
+        while (true) {    
+            if (pool.isTerminated()) {   
+            	OutputStream out  = new FileOutputStream(Constants.finalXlsxPath);
+				ExcelUtils.writeAndClose(out, workbook);
+                break;    
+            }    
+            Thread.sleep(2000);
+        }    
        long end = System.nanoTime();
        System.out.println((end - time)/1000000 + "ms");
+	}
+    public static void main(String[] args) {
+    	try {
+			WebCrawler.getInstance().start();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} 
     }
  
     public void myPrint(String baseUrl) { 
@@ -37,15 +74,12 @@ public class WebCrawlerDemo2 {
         Matcher m = p.matcher(baseUrl);
         if (m.find()) {
             oldLinkHost = m.group();
-        }
- 
+        } 
         oldMap.put(baseUrl, false);
         oldMap = crawlLinks(oldLinkHost, oldMap); 
         for (Map.Entry<String, Boolean> mapping : oldMap.entrySet()) {
 				System.out.println("链接：" + mapping.getKey());  
-        } 
-        pool.shutdown();
- 
+        }  
     }
  
     /**
@@ -66,23 +100,24 @@ public class WebCrawlerDemo2 {
         for (Map.Entry<String, Boolean> mapping : oldMap.entrySet()) {
             // System.out.println("link:" + mapping.getKey() + "--------check:"  + mapping.getValue());
             // 如果没有被遍历过
+        	boolean ignore = false;
             if (!mapping.getValue()) {
-                oldLink = mapping.getKey();
-                if(oldLink.indexOf("/product/")!=-1) {
-                	oldMap.replace(oldLink, false, true);
-                	continue;
-                }
-                if(oldLink.indexOf("/resolve/")!=-1) {
-                	oldMap.replace(oldLink, false, true);
-                	continue;
-                }
+                oldLink = mapping.getKey(); 
                 // 发起GET请求
                 try {
                    
                     Document doc = Jsoup.connect(oldLink).timeout(30 * 1000).get();
                     Elements elements = doc.select("a[href]");
                     for(Element e : elements) {
-                    	String newLink = e.attr("href");    
+                    	String newLink = e.attr("href");
+                    	for(String key : ignoreList) {
+                        	if(newLink.indexOf(key) != -1) {
+                        		oldMap.replace(newLink, false, true);
+                        		ignore = true;
+                            	break;
+                        	}
+                        }
+                        if(ignore) continue;
                         // 判断获取到的链接是否以http开头
                         if (!newLink.startsWith("http")) {
                             if (newLink.startsWith("/"))
@@ -102,7 +137,7 @@ public class WebCrawlerDemo2 {
                         } 
                     } 
                     oldMap.replace(oldLink, false, true); 
-                    Task task = new Task(oldLink, doc);
+                    Task task = new Task(oldLink, doc, workbook);
                     pool.submit(task); 
                 }catch (Exception e) {
                 	 System.out.println(oldLink +":" +  e.getLocalizedMessage());
