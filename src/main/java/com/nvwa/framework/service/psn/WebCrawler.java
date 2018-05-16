@@ -63,7 +63,7 @@ public class WebCrawler {
 	}
     public static void main(String[] args) {
     	try {
-			WebCrawler.getInstance().start();
+			WebCrawler.getInstance().myPrint("http://www.dytt8.net");
 		} catch (Exception e) {
 			e.printStackTrace();
 		} 
@@ -121,6 +121,8 @@ public class WebCrawler {
                     Elements elements = doc.select("a[href]");
                     for(Element e : elements) {
                     	String newLink = e.attr("href");
+                    	boolean matched = Pattern.matches(".*\\.html\\b", newLink);
+                    	if(!matched) continue;
                     	boolean ignore2 = false;
                     	for(String key : ignoreList) {
                         	if(newLink.indexOf(key) != -1) { 

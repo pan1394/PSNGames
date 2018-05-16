@@ -23,6 +23,32 @@ public class Constants {
 		return new Base(code);
 	}
 	
+	public enum Country{
+		HK{
+			{
+				PSN = Constants.PSN_HK;
+				XLSX_PATH = Constants.XLSX_PATH_HK;
+				URL = Constants.URL_HK;
+			}
+			
+		},JP{
+			{
+				PSN = Constants.PSN_JP;
+				XLSX_PATH = Constants.XLSX_PATH_JP;
+				URL = Constants.URL_JP;
+			}
+			
+		},US{
+			{
+				PSN = Constants.PSN_US;
+				XLSX_PATH = Constants.XLSX_PATH_US;
+				URL = Constants.URL_US;
+			}
+		};
+		public String PSN;
+		public String XLSX_PATH;
+		public String URL;
+	}
 	public static class Base{
 		
 		String PSN;
@@ -46,5 +72,11 @@ public class Constants {
 				URL = Constants.URL_US;
 			} 
 		}
+	}
+	
+	public static void main(String[] args	) {
+		 
+		System.out.println(Constants.Country.HK.PSN);
+		System.out.println(Constants.Country.JP.PSN);
 	}
 }
